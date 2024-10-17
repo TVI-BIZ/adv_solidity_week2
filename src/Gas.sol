@@ -203,30 +203,54 @@ contract GasContract is Ownable, Constants {
         return payments[_user];
     }
 
-    function transfer(address _recipient, uint256 _amount, string calldata _name) public returns (bool status_) {
-        address senderOfTx = msg.sender;
-        require(balances[senderOfTx] >= _amount, "Gas Contract - Transfer function - Sender has insufficient Balance");
-        require(
-            bytes(_name).length < 9,
-            "Gas Contract - Transfer function -  The recipient name is too long, there is a max length of 8 characters"
-        );
-        balances[senderOfTx] -= _amount;
+    // function transfer(address _recipient, uint256 _amount, string calldata _name) public returns (bool status_) {
+    //     address senderOfTx = msg.sender;
+    //     require(balances[senderOfTx] >= _amount, "Gas Contract - Transfer function - Sender has insufficient Balance");
+    //     require(
+    //         bytes(_name).length < 9,
+    //         "Gas Contract - Transfer function -  The recipient name is too long, there is a max length of 8 characters"
+    //     );
+    //     balances[senderOfTx] -= _amount;
+    //     balances[_recipient] += _amount;
+    //     emit Transfer(_recipient, _amount);
+    //     Payment memory payment;
+    //     payment.admin = address(0);
+    //     payment.adminUpdated = false;
+    //     payment.paymentType = PaymentType.BasicPayment;
+    //     payment.recipient = _recipient;
+    //     payment.amount = _amount;
+    //     payment.recipientName = _name;
+    //     payment.paymentID = ++paymentCounter;
+    //     payments[senderOfTx].push(payment);
+    //     bool[] memory status = new bool[](tradePercent);
+    //     for (uint256 i = 0; i < tradePercent; i++) {
+    //         status[i] = true;
+    //     }
+    //     return (status[0] == true);
+    // }
+    function transfer(address _recipient, uint256 _amount, string calldata _name) public returns (bool) {
+        require(balances[msg.sender] >= _amount, "Insufficient Balance");
+        require(bytes(_name).length < 9, "Recipient name is too long");
+
+        balances[msg.sender] -= _amount;
         balances[_recipient] += _amount;
+
         emit Transfer(_recipient, _amount);
-        Payment memory payment;
-        payment.admin = address(0);
-        payment.adminUpdated = false;
-        payment.paymentType = PaymentType.BasicPayment;
-        payment.recipient = _recipient;
-        payment.amount = _amount;
-        payment.recipientName = _name;
-        payment.paymentID = ++paymentCounter;
-        payments[senderOfTx].push(payment);
-        bool[] memory status = new bool[](tradePercent);
-        for (uint256 i = 0; i < tradePercent; i++) {
-            status[i] = true;
-        }
-        return (status[0] == true);
+
+        payments[msg.sender].push(
+            Payment({
+                paymentType: PaymentType.BasicPayment,
+                paymentID: ++paymentCounter,
+                adminUpdated: false,
+                recipientName: _name,
+                recipient: _recipient,
+                admin: address(0),
+                amount: _amount
+            })
+        );
+
+        // Return true directly; avoids unnecessary memory allocation and computation
+        return true;
     }
 
     function updatePayment(address _user, uint256 _ID, uint256 _amount, PaymentType _type) public onlyAdminOrOwner {
