@@ -66,34 +66,17 @@ contract GasContract is Ownable, Constants {
     event AddedToWhitelist(address userAddress, uint256 tier);
 
     modifier onlyAdminOrOwner() {
-        address senderOfTx = msg.sender;
-        if (checkForAdmin(senderOfTx)) {
-            require(checkForAdmin(senderOfTx), "Gas Contract Only Admin Check-  Caller not admin");
-            _;
-        } else if (senderOfTx == contractOwner) {
+        if (msg.sender == contractOwner || checkForAdmin(msg.sender)) {
             _;
         } else {
-            revert(
-                "Error in Gas contract - onlyAdminOrOwner modifier : revert happened because the originator of the transaction was not the admin, and furthermore he wasn't the owner of the contract, so he cannot run this function"
-            );
+            revert("Not authorized: Caller is neither admin nor owner");
         }
     }
 
     modifier checkIfWhiteListed(address sender) {
-        address senderOfTx = msg.sender;
-        require(
-            senderOfTx == sender,
-            "Gas Contract CheckIfWhiteListed modifier : revert happened because the originator of the transaction was not the sender"
-        );
-        uint256 usersTier = whitelist[senderOfTx];
-        require(
-            usersTier > 0,
-            "Gas Contract CheckIfWhiteListed modifier : revert happened because the user is not whitelisted"
-        );
-        require(
-            usersTier < 4,
-            "Gas Contract CheckIfWhiteListed modifier : revert happened because the user's tier is incorrect, it cannot be over 4 as the only tier we have are: 1, 2, 3; therfore 4 is an invalid tier for the whitlist of this contract. make sure whitlist tiers were set correctly"
-        );
+        require(msg.sender == sender, "Sender mismatch");
+        uint256 usersTier = whitelist[msg.sender];
+        require(usersTier > 0 && usersTier < 4, "Invalid whitelist tier");
         _;
     }
 
@@ -121,53 +104,6 @@ contract GasContract is Ownable, Constants {
             }
         }
     }
-
-    // function getPaymentHistory() public payable returns (History[] memory paymentHistory_) {
-    //     return paymentHistory;
-    // }
-
-    // function checkForAdmin(address _user) public view returns (bool admin_) {
-    //     bool admin = false;
-    //     for (uint256 ii = 0; ii < administrators.length; ii++) {
-    //         if (administrators[ii] == _user) {
-    //             admin = true;
-    //         }
-    //     }
-    //     return admin;
-    // }
-
-    // function balanceOf(address _user) public view returns (uint256 balance_) {
-    //     uint256 balance = balances[_user];
-    //     return balance;
-    // }
-
-    // function getTradingMode() public view returns (bool mode_) {
-    //     bool mode = false;
-    //     if (tradeFlag == 1 || dividendFlag == 1) {
-    //         mode = true;
-    //     } else {
-    //         mode = false;
-    //     }
-    //     return mode;
-    // }
-
-    // function addHistory(address _updateAddress, bool _tradeMode) public returns (bool status_, bool tradeMode_) {
-    //     History memory history;
-    //     history.blockNumber = block.number;
-    //     history.lastUpdate = block.timestamp;
-    //     history.updatedBy = _updateAddress;
-    //     paymentHistory.push(history);
-    //     bool[] memory status = new bool[](tradePercent);
-    //     for (uint256 i = 0; i < tradePercent; i++) {
-    //         status[i] = true;
-    //     }
-    //     return ((status[0] == true), _tradeMode);
-    // }
-
-    // function getPayments(address _user) public view returns (Payment[] memory payments_) {
-    //     require(_user != address(0), "Gas Contract - getPayments function - User must have a valid non zero address");
-    //     return payments[_user];
-    // }
 
     function getPaymentHistory() public view returns (History[] memory) {
         return paymentHistory;
@@ -203,31 +139,6 @@ contract GasContract is Ownable, Constants {
         return payments[_user];
     }
 
-    // function transfer(address _recipient, uint256 _amount, string calldata _name) public returns (bool status_) {
-    //     address senderOfTx = msg.sender;
-    //     require(balances[senderOfTx] >= _amount, "Gas Contract - Transfer function - Sender has insufficient Balance");
-    //     require(
-    //         bytes(_name).length < 9,
-    //         "Gas Contract - Transfer function -  The recipient name is too long, there is a max length of 8 characters"
-    //     );
-    //     balances[senderOfTx] -= _amount;
-    //     balances[_recipient] += _amount;
-    //     emit Transfer(_recipient, _amount);
-    //     Payment memory payment;
-    //     payment.admin = address(0);
-    //     payment.adminUpdated = false;
-    //     payment.paymentType = PaymentType.BasicPayment;
-    //     payment.recipient = _recipient;
-    //     payment.amount = _amount;
-    //     payment.recipientName = _name;
-    //     payment.paymentID = ++paymentCounter;
-    //     payments[senderOfTx].push(payment);
-    //     bool[] memory status = new bool[](tradePercent);
-    //     for (uint256 i = 0; i < tradePercent; i++) {
-    //         status[i] = true;
-    //     }
-    //     return (status[0] == true);
-    // }
     function transfer(address _recipient, uint256 _amount, string calldata _name) public returns (bool) {
         require(balances[msg.sender] >= _amount, "Insufficient Balance");
         require(bytes(_name).length < 9, "Recipient name is too long");
