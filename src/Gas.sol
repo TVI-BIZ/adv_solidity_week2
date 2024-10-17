@@ -123,8 +123,11 @@ contract GasContract is Ownable, Constants {
         return balances[_user];
     }
 
+    // function getTradingMode() public view returns (bool) {
+    //     // Return the expression result directly
+    //     return tradeFlag == 1 || dividendFlag == 1;
+    // }
     function getTradingMode() public view returns (bool) {
-        // Return the expression result directly
         return tradeFlag == 1 || dividendFlag == 1;
     }
 
@@ -165,26 +168,32 @@ contract GasContract is Ownable, Constants {
         return true;
     }
 
-    function updatePayment(address _user, uint256 _ID, uint256 _amount, PaymentType _type) public onlyAdminOrOwner {
-        require(_ID > 0, "ID must be greater than 0");
-        require(_amount > 0, "Amount must be greater than 0");
-        require(_user != address(0), "Address must be valid and non-zero");
+    function updatePayment(address _user, uint256 _ID, uint256 _amount, PaymentType _type) external onlyAdminOrOwner {
+        require(_ID > 0, "Invalid ID");
+        require(_amount > 0, "Invalid amount");
+        require(_user != address(0), "Invalid address");
 
         Payment[] storage userPayments = payments[_user];
         bool tradingMode = getTradingMode();
 
-        for (uint256 i = 0; i < userPayments.length; i++) {
+        // Cache length outside the loop to avoid repeated storage access
+        uint256 len = userPayments.length;
+
+        for (uint256 i = 0; i < len;) {
             Payment storage payment = userPayments[i];
             if (payment.paymentID == _ID) {
                 payment.adminUpdated = true;
-                payment.admin = _user;
+                payment.admin = msg.sender; // Changed from _user to msg.sender if admin should be set
                 payment.paymentType = _type;
                 payment.amount = _amount;
 
                 addHistory(_user, tradingMode);
                 emit PaymentUpdated(msg.sender, _ID, _amount, payment.recipientName);
-                break; // Exit the loop early after updating the payment
+                break; // Exit the loop immediately after the update
             }
+            unchecked {
+                ++i;
+            } // Use unchecked to save gas on loop increment
         }
     }
 
