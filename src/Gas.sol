@@ -102,26 +102,6 @@ contract GasContract is Ownable, Constants {
     event PaymentUpdated(address admin, uint256 ID, uint256 amount, string recipient);
     event WhiteListTransfer(address indexed);
 
-    // constructor(address[] memory _admins, uint256 _totalSupply) {
-    //     contractOwner = msg.sender;
-    //     totalSupply = _totalSupply;
-
-    //     for (uint256 ii = 0; ii < administrators.length; ii++) {
-    //         if (_admins[ii] != address(0)) {
-    //             administrators[ii] = _admins[ii];
-    //             if (_admins[ii] == contractOwner) {
-    //                 balances[contractOwner] = totalSupply;
-    //             } else {
-    //                 balances[_admins[ii]] = 0;
-    //             }
-    //             if (_admins[ii] == contractOwner) {
-    //                 emit supplyChanged(_admins[ii], totalSupply);
-    //             } else if (_admins[ii] != contractOwner) {
-    //                 emit supplyChanged(_admins[ii], 0);
-    //             }
-    //         }
-    //     }
-    // }
     constructor(address[] memory _admins, uint256 _totalSupply) {
         contractOwner = msg.sender;
         totalSupply = _totalSupply;
@@ -142,50 +122,84 @@ contract GasContract is Ownable, Constants {
         }
     }
 
-    function getPaymentHistory() public payable returns (History[] memory paymentHistory_) {
+    // function getPaymentHistory() public payable returns (History[] memory paymentHistory_) {
+    //     return paymentHistory;
+    // }
+
+    // function checkForAdmin(address _user) public view returns (bool admin_) {
+    //     bool admin = false;
+    //     for (uint256 ii = 0; ii < administrators.length; ii++) {
+    //         if (administrators[ii] == _user) {
+    //             admin = true;
+    //         }
+    //     }
+    //     return admin;
+    // }
+
+    // function balanceOf(address _user) public view returns (uint256 balance_) {
+    //     uint256 balance = balances[_user];
+    //     return balance;
+    // }
+
+    // function getTradingMode() public view returns (bool mode_) {
+    //     bool mode = false;
+    //     if (tradeFlag == 1 || dividendFlag == 1) {
+    //         mode = true;
+    //     } else {
+    //         mode = false;
+    //     }
+    //     return mode;
+    // }
+
+    // function addHistory(address _updateAddress, bool _tradeMode) public returns (bool status_, bool tradeMode_) {
+    //     History memory history;
+    //     history.blockNumber = block.number;
+    //     history.lastUpdate = block.timestamp;
+    //     history.updatedBy = _updateAddress;
+    //     paymentHistory.push(history);
+    //     bool[] memory status = new bool[](tradePercent);
+    //     for (uint256 i = 0; i < tradePercent; i++) {
+    //         status[i] = true;
+    //     }
+    //     return ((status[0] == true), _tradeMode);
+    // }
+
+    // function getPayments(address _user) public view returns (Payment[] memory payments_) {
+    //     require(_user != address(0), "Gas Contract - getPayments function - User must have a valid non zero address");
+    //     return payments[_user];
+    // }
+
+    function getPaymentHistory() public view returns (History[] memory) {
         return paymentHistory;
     }
 
-    function checkForAdmin(address _user) public view returns (bool admin_) {
-        bool admin = false;
+    function checkForAdmin(address _user) public view returns (bool) {
         for (uint256 ii = 0; ii < administrators.length; ii++) {
             if (administrators[ii] == _user) {
-                admin = true;
+                return true; // Exit loop early if admin is found
             }
         }
-        return admin;
+        return false; // If no match was found
     }
 
-    function balanceOf(address _user) public view returns (uint256 balance_) {
-        uint256 balance = balances[_user];
-        return balance;
+    function balanceOf(address _user) public view returns (uint256) {
+        return balances[_user];
     }
 
-    function getTradingMode() public view returns (bool mode_) {
-        bool mode = false;
-        if (tradeFlag == 1 || dividendFlag == 1) {
-            mode = true;
-        } else {
-            mode = false;
-        }
-        return mode;
+    function getTradingMode() public view returns (bool) {
+        // Return the expression result directly
+        return tradeFlag == 1 || dividendFlag == 1;
     }
 
-    function addHistory(address _updateAddress, bool _tradeMode) public returns (bool status_, bool tradeMode_) {
-        History memory history;
-        history.blockNumber = block.number;
-        history.lastUpdate = block.timestamp;
-        history.updatedBy = _updateAddress;
-        paymentHistory.push(history);
-        bool[] memory status = new bool[](tradePercent);
-        for (uint256 i = 0; i < tradePercent; i++) {
-            status[i] = true;
-        }
-        return ((status[0] == true), _tradeMode);
+    function addHistory(address _updateAddress, bool _tradeMode) public returns (bool, bool) {
+        paymentHistory.push(
+            History({blockNumber: block.number, lastUpdate: block.timestamp, updatedBy: _updateAddress})
+        );
+        return (true, _tradeMode);
     }
 
-    function getPayments(address _user) public view returns (Payment[] memory payments_) {
-        require(_user != address(0), "Gas Contract - getPayments function - User must have a valid non zero address");
+    function getPayments(address _user) public view returns (Payment[] memory) {
+        require(_user != address(0), "Invalid address");
         return payments[_user];
     }
 
