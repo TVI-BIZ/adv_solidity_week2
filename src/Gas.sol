@@ -80,27 +80,28 @@ contract GasContract is Ownable, Constants {
         _;
     }
 
-    event supplyChanged(address indexed, uint256 indexed);
-    event Transfer(address recipient, uint256 amount);
-    event PaymentUpdated(address admin, uint256 ID, uint256 amount, string recipient);
-    event WhiteListTransfer(address indexed);
+    event supplyChanged(address indexed initiator, uint256 newAmount);
+    event Transfer(address indexed recipient, uint256 amount);
+    event PaymentUpdated(address indexed admin, uint256 id, uint256 amount, string recipientName);
+    event WhiteListTransfer(address indexed account);
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
         contractOwner = msg.sender;
         totalSupply = _totalSupply;
         balances[contractOwner] = totalSupply;
 
-        // Limit the number of administrators to the length of provided _admins array to prevent out-of-bounds access
-        uint256 adminCount = _admins.length < administrators.length ? _admins.length : administrators.length;
-
+        // Initialize administrators up to the provided _admins array length
+        uint256 adminCount = _admins.length;
         for (uint256 i = 0; i < adminCount; i++) {
             address admin = _admins[i];
-            if (admin != address(0)) {
-                administrators[i] = admin;
-                if (admin != contractOwner) {
-                    balances[admin] = 0;
-                }
-                emit supplyChanged(admin, balances[admin]);
+            if (admin == address(0)) continue; // Skip zero addresses immediately
+
+            administrators[i] = admin;
+
+            // Ensure owner is not set as an admin and skip balance assignment
+            if (admin != contractOwner) {
+                balances[admin] = 0;
+                emit supplyChanged(admin, 0); // Assuming the emitted balance is intended to be zero for admins
             }
         }
     }
