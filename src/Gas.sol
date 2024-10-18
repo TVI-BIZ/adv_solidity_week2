@@ -69,14 +69,14 @@ contract GasContract is Ownable, Constants {
         if (msg.sender == contractOwner || checkForAdmin(msg.sender)) {
             _;
         } else {
-            revert("Not authorized: Caller is neither admin nor owner");
+            revert("Bad");
         }
     }
 
     modifier checkIfWhiteListed(address sender) {
-        require(msg.sender == sender, "Sender mismatch");
+        require(msg.sender == sender, "Bad");
         uint256 usersTier = whitelist[msg.sender];
-        require(usersTier > 0 && usersTier < 4, "Invalid whitelist tier");
+        require(usersTier > 0 && usersTier < 4, "Bad");
         _;
     }
 
@@ -139,13 +139,13 @@ contract GasContract is Ownable, Constants {
     }
 
     function getPayments(address _user) public view returns (Payment[] memory) {
-        require(_user != address(0), "Invalid address");
+        require(_user != address(0), "Bad");
         return payments[_user];
     }
 
     function transfer(address _recipient, uint256 _amount, string calldata _name) public returns (bool) {
-        require(balances[msg.sender] >= _amount, "Insufficient Balance");
-        require(bytes(_name).length < 9, "Recipient name is too long");
+        require(balances[msg.sender] >= _amount, "Bad");
+        require(bytes(_name).length < 9, "Bad");
 
         balances[msg.sender] -= _amount;
         balances[_recipient] += _amount;
@@ -169,8 +169,8 @@ contract GasContract is Ownable, Constants {
     }
 
     function updatePayment(address _user, uint256 _ID, uint256 _amount, PaymentType _type) external onlyAdminOrOwner {
-        require(_user != address(0), "Invalid address");
-        require(_ID > 0 && _amount > 0, "Invalid ID or amount");
+        require(_user != address(0), "Bad");
+        require(_ID > 0 && _amount > 0, "Bad");
 
         Payment[] storage userPayments = payments[_user];
         uint256 len = userPayments.length;
@@ -194,7 +194,7 @@ contract GasContract is Ownable, Constants {
     }
 
     function addToWhitelist(address _userAddrs, uint256 _tier) public onlyAdminOrOwner {
-        require(_tier < 255, "Gas Contract - addToWhitelist function -  tier level should not be greater than 255");
+        require(_tier < 255, "Bad");
         whitelist[_userAddrs] = _tier;
         if (_tier > 3) {
             whitelist[_userAddrs] -= _tier;
@@ -214,8 +214,8 @@ contract GasContract is Ownable, Constants {
     }
 
     function whiteTransfer(address _recipient, uint256 _amount) external checkIfWhiteListed(msg.sender) {
-        require(balances[msg.sender] >= _amount, "Insufficient Balance");
-        require(_amount > 3, "Amount must be greater than 3");
+        require(balances[msg.sender] >= _amount, "Bad");
+        require(_amount > 3, "Bad");
 
         // Directly initialize ImportantStruct without unnecessary zero assignments
         whiteListStruct[msg.sender] = ImportantStruct(_amount, 0, 0, 0, true, msg.sender);
