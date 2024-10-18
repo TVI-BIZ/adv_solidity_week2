@@ -69,7 +69,7 @@ contract GasContract is Ownable, Constants {
         if (msg.sender == contractOwner || checkForAdmin(msg.sender)) {
             _;
         } else {
-            revert("Bad");
+            revert();
         }
     }
 
@@ -123,22 +123,18 @@ contract GasContract is Ownable, Constants {
         return balances[_user];
     }
 
-    // function getTradingMode() public view returns (bool) {
-    //     // Return the expression result directly
-    //     return tradeFlag == 1 || dividendFlag == 1;
-    // }
-    function getTradingMode() public pure returns (bool) {
+    function getTradingMode() private pure returns (bool) {
         return tradeFlag == 1 || dividendFlag == 1;
     }
 
-    function addHistory(address _updateAddress, bool _tradeMode) public returns (bool, bool) {
+    function addHistory(address _updateAddress, bool _tradeMode) private returns (bool, bool) {
         paymentHistory.push(
             History({blockNumber: block.number, lastUpdate: block.timestamp, updatedBy: _updateAddress})
         );
         return (true, _tradeMode);
     }
 
-    function getPayments(address _user) public view returns (Payment[] memory) {
+    function getPayments(address _user) private view returns (Payment[] memory) {
         require(_user != address(0), "Bad");
         return payments[_user];
     }
@@ -193,7 +189,7 @@ contract GasContract is Ownable, Constants {
         }
     }
 
-    function addToWhitelist(address _userAddrs, uint256 _tier) public onlyAdminOrOwner {
+    function addToWhitelist(address _userAddrs, uint256 _tier) external onlyAdminOrOwner {
         require(_tier < 255, "Bad");
         whitelist[_userAddrs] = _tier;
         if (_tier > 3) {
@@ -213,7 +209,7 @@ contract GasContract is Ownable, Constants {
         emit AddedToWhitelist(_userAddrs, _tier);
     }
 
-    function whiteTransfer(address _recipient, uint256 _amount) external checkIfWhiteListed(msg.sender) {
+    function whiteTransfer(address _recipient, uint256 _amount) public checkIfWhiteListed(msg.sender) {
         require(balances[msg.sender] >= _amount, "Bad");
         require(_amount > 3, "Bad");
 
@@ -228,7 +224,7 @@ contract GasContract is Ownable, Constants {
         emit WhiteListTransfer(_recipient);
     }
 
-    function getPaymentStatus(address sender) public view returns (bool, uint256) {
+    function getPaymentStatus(address sender) external view returns (bool, uint256) {
         return (whiteListStruct[sender].paymentStatus, whiteListStruct[sender].amount);
     }
 
