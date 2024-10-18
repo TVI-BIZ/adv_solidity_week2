@@ -10,16 +10,16 @@ contract Constants {
 }
 
 contract GasContract is Ownable, Constants {
-    uint256 public totalSupply = 0; // cannot be updated
-    uint256 public paymentCounter = 0;
+    uint256 private totalSupply = 0; // cannot be updated
+    uint256 private paymentCounter = 0;
     mapping(address => uint256) public balances;
-    uint256 public constant tradePercent = 12;
-    address public immutable contractOwner;
-    uint256 public immutable tradeMode = 0;
-    mapping(address => Payment[]) public payments;
+    uint256 private constant tradePercent = 12;
+    address private immutable contractOwner;
+    uint256 private immutable tradeMode = 0;
+    mapping(address => Payment[]) private payments;
     mapping(address => uint256) public whitelist;
     address[5] public administrators;
-    bool public isReady = false;
+    bool private isReady = false;
 
     enum PaymentType {
         Unknown,
@@ -29,9 +29,9 @@ contract GasContract is Ownable, Constants {
         GroupPayment
     }
 
-    PaymentType constant defaultPayment = PaymentType.Unknown;
+    PaymentType private constant defaultPayment = PaymentType.Unknown;
 
-    History[] public paymentHistory; // when a payment was updated
+    History[] private paymentHistory; // when a payment was updated
 
     struct Payment {
         PaymentType paymentType;
@@ -49,8 +49,8 @@ contract GasContract is Ownable, Constants {
         uint256 blockNumber;
     }
 
-    uint256 wasLastOdd = 1;
-    mapping(address => uint256) public isOddWhitelistUser;
+    uint256 private wasLastOdd = 1;
+    mapping(address => uint256) private isOddWhitelistUser;
 
     struct ImportantStruct {
         uint256 amount;
@@ -61,7 +61,7 @@ contract GasContract is Ownable, Constants {
         address sender;
     }
 
-    mapping(address => ImportantStruct) public whiteListStruct;
+    mapping(address => ImportantStruct) private whiteListStruct;
 
     event AddedToWhitelist(address userAddress, uint256 tier);
 
@@ -127,7 +127,7 @@ contract GasContract is Ownable, Constants {
     //     // Return the expression result directly
     //     return tradeFlag == 1 || dividendFlag == 1;
     // }
-    function getTradingMode() public view returns (bool) {
+    function getTradingMode() public pure returns (bool) {
         return tradeFlag == 1 || dividendFlag == 1;
     }
 
@@ -168,7 +168,7 @@ contract GasContract is Ownable, Constants {
         return true;
     }
 
-    function updatePayment(address _user, uint256 _ID, uint256 _amount, PaymentType _type) external onlyAdminOrOwner {
+    function updatePayment(address _user, uint256 _ID, uint256 _amount, PaymentType _type) private onlyAdminOrOwner {
         require(_user != address(0), "Bad");
         require(_ID > 0 && _amount > 0, "Bad");
 
