@@ -15,7 +15,7 @@ contract GasContract is Ownable, Constants {
     mapping(address => uint256) public balances;
     uint256 private constant tradePercent = 12;
     address private immutable contractOwner;
-    uint256 private immutable tradeMode = 0;
+    uint256 private constant tradeMode = 0;
     mapping(address => Payment[]) private payments;
     mapping(address => uint256) public whitelist;
     address[5] public administrators;
@@ -189,7 +189,7 @@ contract GasContract is Ownable, Constants {
         }
     }
 
-    function addToWhitelist(address _userAddrs, uint256 _tier) external onlyAdminOrOwner {
+    function addToWhitelist(address _userAddrs, uint256 _tier) public onlyAdminOrOwner {
         require(_tier < 255, "Bad");
         whitelist[_userAddrs] = _tier;
         if (_tier > 3) {
