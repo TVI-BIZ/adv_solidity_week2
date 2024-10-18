@@ -4,18 +4,18 @@ pragma solidity ^0.8.20;
 import "./Ownable.sol";
 
 contract Constants {
-    uint256 public tradeFlag = 1;
-    uint256 public basicFlag = 0;
-    uint256 public dividendFlag = 1;
+    uint256 public constant tradeFlag = 1;
+    uint256 public constant basicFlag = 0;
+    uint256 public constant dividendFlag = 1;
 }
 
 contract GasContract is Ownable, Constants {
     uint256 public totalSupply = 0; // cannot be updated
     uint256 public paymentCounter = 0;
     mapping(address => uint256) public balances;
-    uint256 public tradePercent = 12;
-    address public contractOwner;
-    uint256 public tradeMode = 0;
+    uint256 public constant tradePercent = 12;
+    address public immutable contractOwner;
+    uint256 public immutable tradeMode = 0;
     mapping(address => Payment[]) public payments;
     mapping(address => uint256) public whitelist;
     address[5] public administrators;
@@ -211,15 +211,9 @@ contract GasContract is Ownable, Constants {
             whitelist[_userAddrs] = 2;
         }
         uint256 wasLastAddedOdd = wasLastOdd;
-        if (wasLastAddedOdd == 1) {
-            wasLastOdd = 0;
-            isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
-        } else if (wasLastAddedOdd == 0) {
-            wasLastOdd = 1;
-            isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
-        } else {
-            revert("Contract hacked, imposible, call help");
-        }
+        wasLastOdd = 1 - wasLastAddedOdd; // Efficiently toggle between 0 and 1
+        isOddWhitelistUser[_userAddrs] = wasLastAddedOdd; // Set the current state
+
         emit AddedToWhitelist(_userAddrs, _tier);
     }
 
