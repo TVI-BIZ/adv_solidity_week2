@@ -169,27 +169,23 @@ contract GasContract is Ownable, Constants {
     }
 
     function updatePayment(address _user, uint256 _ID, uint256 _amount, PaymentType _type) external onlyAdminOrOwner {
-        require(_ID > 0, "Invalid ID");
-        require(_amount > 0, "Invalid amount");
         require(_user != address(0), "Invalid address");
+        require(_ID > 0 && _amount > 0, "Invalid ID or amount");
 
         Payment[] storage userPayments = payments[_user];
-        bool tradingMode = getTradingMode();
-
-        // Cache length outside the loop to avoid repeated storage access
         uint256 len = userPayments.length;
 
         for (uint256 i = 0; i < len;) {
             Payment storage payment = userPayments[i];
             if (payment.paymentID == _ID) {
                 payment.adminUpdated = true;
-                payment.admin = msg.sender; // Changed from _user to msg.sender if admin should be set
+                payment.admin = msg.sender; // This assumes msg.sender is the admin making the update
                 payment.paymentType = _type;
                 payment.amount = _amount;
 
-                addHistory(_user, tradingMode);
+                addHistory(_user, getTradingMode()); // Inline getTradingMode to reduce storage access
                 emit PaymentUpdated(msg.sender, _ID, _amount, payment.recipientName);
-                break; // Exit the loop immediately after the update
+                break;
             }
             unchecked {
                 ++i;
