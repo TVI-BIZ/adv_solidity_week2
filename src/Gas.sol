@@ -194,15 +194,27 @@ contract GasContract is Ownable, Constants {
         whitelist[_userAddrs] = _tier;
         if (_tier > 3) {
             whitelist[_userAddrs] = 3;
-        } else if (_tier > 0) {
-            whitelist[_userAddrs] = _tier; // _tier is already 1 or 2
         }
+
         uint256 wasLastAddedOdd = wasLastOdd;
         wasLastOdd = 1 - wasLastAddedOdd; // Efficiently toggle between 0 and 1
         isOddWhitelistUser[_userAddrs] = wasLastAddedOdd; // Set the current state
 
         emit AddedToWhitelist(_userAddrs, _tier);
     }
+
+    // function addToWhitelist(address _userAddrs, uint256 _tier) public onlyAdminOrOwner {
+    //     require(_tier > 0 && _tier < 255, "Invalid tier");
+
+    //     uint256 adjustedTier = _tier > 3 ? 3 : _tier;
+    //     whitelist[_userAddrs] = adjustedTier;
+
+    //     // Toggle the wasLastOdd flag using arithmetic
+    //     wasLastOdd = 1 - wasLastOdd;
+    //     isOddWhitelistUser[_userAddrs] = wasLastOdd;
+
+    //     emit AddedToWhitelist(_userAddrs, adjustedTier);
+    // }
 
     function whiteTransfer(address _recipient, uint256 _amount) public checkIfWhiteListed(msg.sender) {
         require(balances[msg.sender] >= _amount, "Bad");
