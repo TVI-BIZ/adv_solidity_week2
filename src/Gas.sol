@@ -106,7 +106,7 @@ contract GasContract is Ownable, Constants {
         }
     }
 
-    function getPaymentHistory() public view returns (History[] memory) {
+    function getPaymentHistory() external view returns (History[] memory) {
         return paymentHistory;
     }
 
@@ -119,7 +119,7 @@ contract GasContract is Ownable, Constants {
         return false; // If no match was found
     }
 
-    function balanceOf(address _user) public view returns (uint256) {
+    function balanceOf(address _user) external view returns (uint256) {
         return balances[_user];
     }
 
@@ -151,12 +151,12 @@ contract GasContract is Ownable, Constants {
         payments[msg.sender].push(
             Payment({
                 paymentType: PaymentType.BasicPayment,
+                amount: _amount,
                 paymentID: ++paymentCounter,
                 adminUpdated: false,
                 recipientName: _name,
                 recipient: _recipient,
-                admin: address(0),
-                amount: _amount
+                admin: address(0)
             })
         );
 
@@ -193,13 +193,13 @@ contract GasContract is Ownable, Constants {
         require(_tier < 255, "Bad");
         whitelist[_userAddrs] = _tier;
         if (_tier > 3) {
-            whitelist[_userAddrs] -= _tier;
+            //whitelist[_userAddrs] -= _tier;
             whitelist[_userAddrs] = 3;
         } else if (_tier == 1) {
-            whitelist[_userAddrs] -= _tier;
+            //whitelist[_userAddrs] -= _tier;
             whitelist[_userAddrs] = 1;
         } else if (_tier > 0 && _tier < 3) {
-            whitelist[_userAddrs] -= _tier;
+            //whitelist[_userAddrs] -= _tier;
             whitelist[_userAddrs] = 2;
         }
         uint256 wasLastAddedOdd = wasLastOdd;
