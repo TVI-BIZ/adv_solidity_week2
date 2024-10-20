@@ -80,9 +80,9 @@ contract GasContract is Ownable, Constants {
         _;
     }
 
-    event supplyChanged(address indexed initiator, uint256 newAmount);
+    event supplyChanged(address initiator, uint256 newAmount);
     event Transfer(address indexed recipient, uint256 amount);
-    event PaymentUpdated(address indexed admin, uint256 id, uint256 amount, string recipientName);
+    event PaymentUpdated(address admin, uint256 id, uint256 amount, string recipientName);
     event WhiteListTransfer(address indexed account);
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
@@ -90,18 +90,16 @@ contract GasContract is Ownable, Constants {
         totalSupply = _totalSupply;
         balances[contractOwner] = totalSupply;
 
-        // Initialize administrators up to the provided _admins array length
-        uint256 adminCount = _admins.length;
-        for (uint256 i = 0; i < adminCount; i++) {
+        //uint256 adminCount = _admins.length;
+        for (uint256 i = 0; i < _admins.length; i++) {
             address admin = _admins[i];
-            if (admin == address(0)) continue; // Skip zero addresses immediately
+            if (admin == address(0)) continue;
 
             administrators[i] = admin;
 
-            // Ensure owner is not set as an admin and skip balance assignment
             if (admin != contractOwner) {
                 balances[admin] = 0;
-                emit supplyChanged(admin, 0); // Assuming the emitted balance is intended to be zero for admins
+                emit supplyChanged(admin, 0);
             }
         }
     }
@@ -113,10 +111,10 @@ contract GasContract is Ownable, Constants {
     function checkForAdmin(address _user) public view returns (bool) {
         for (uint256 ii = 0; ii < administrators.length; ii++) {
             if (administrators[ii] == _user) {
-                return true; // Exit loop early if admin is found
+                return true;
             }
         }
-        return false; // If no match was found
+        return false;
     }
 
     function balanceOf(address _user) external view returns (uint256) {
@@ -159,8 +157,6 @@ contract GasContract is Ownable, Constants {
                 admin: address(0)
             })
         );
-
-        // Return true directly; avoids unnecessary memory allocation and computation
         return true;
     }
 
@@ -169,23 +165,22 @@ contract GasContract is Ownable, Constants {
         require(_ID > 0 && _amount > 0, "Bad");
 
         Payment[] memory userPayments = payments[_user];
-        uint256 len = userPayments.length;
 
-        for (uint256 i = 0; i < len;) {
+        for (uint256 i = 0; i < userPayments.length;) {
             Payment memory payment = userPayments[i];
             if (payment.paymentID == _ID) {
                 payment.adminUpdated = true;
-                payment.admin = msg.sender; // This assumes msg.sender is the admin making the update
+                payment.admin = msg.sender;
                 payment.paymentType = _type;
                 payment.amount = _amount;
 
-                addHistory(_user, getTradingMode()); // Inline getTradingMode to reduce storage access
+                addHistory(_user, getTradingMode());
                 emit PaymentUpdated(msg.sender, _ID, _amount, payment.recipientName);
                 break;
             }
             unchecked {
                 ++i;
-            } // Use unchecked to save gas on loop increment
+            }
         }
     }
 
@@ -195,35 +190,19 @@ contract GasContract is Ownable, Constants {
         if (_tier > 3) {
             whitelist[_userAddrs] = 3;
         }
-
         uint256 wasLastAddedOdd = wasLastOdd;
-        wasLastOdd = 1 - wasLastAddedOdd; // Efficiently toggle between 0 and 1
-        isOddWhitelistUser[_userAddrs] = wasLastAddedOdd; // Set the current state
+        wasLastOdd = 1 - wasLastAddedOdd;
+        isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
 
         emit AddedToWhitelist(_userAddrs, _tier);
     }
-
-    // function addToWhitelist(address _userAddrs, uint256 _tier) public onlyAdminOrOwner {
-    //     require(_tier > 0 && _tier < 255, "Invalid tier");
-
-    //     uint256 adjustedTier = _tier > 3 ? 3 : _tier;
-    //     whitelist[_userAddrs] = adjustedTier;
-
-    //     // Toggle the wasLastOdd flag using arithmetic
-    //     wasLastOdd = 1 - wasLastOdd;
-    //     isOddWhitelistUser[_userAddrs] = wasLastOdd;
-
-    //     emit AddedToWhitelist(_userAddrs, adjustedTier);
-    // }
 
     function whiteTransfer(address _recipient, uint256 _amount) public checkIfWhiteListed(msg.sender) {
         require(balances[msg.sender] >= _amount, "Bad");
         require(_amount > 3, "Bad");
 
-        // Directly initialize ImportantStruct without unnecessary zero assignments
         whiteListStruct[msg.sender] = ImportantStruct(_amount, 0, 0, 0, true, msg.sender);
 
-        // Adjust balances efficiently
         uint256 whitelistBonus = whitelist[msg.sender];
         balances[msg.sender] = balances[msg.sender] - _amount + whitelistBonus;
         balances[_recipient] = balances[_recipient] + _amount - whitelistBonus;
