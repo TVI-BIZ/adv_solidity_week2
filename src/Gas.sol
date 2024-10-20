@@ -193,14 +193,9 @@ contract GasContract is Ownable, Constants {
         require(_tier < 255, "Bad");
         whitelist[_userAddrs] = _tier;
         if (_tier > 3) {
-            //whitelist[_userAddrs] -= _tier;
             whitelist[_userAddrs] = 3;
-        } else if (_tier == 1) {
-            //whitelist[_userAddrs] -= _tier;
-            whitelist[_userAddrs] = 1;
-        } else if (_tier > 0 && _tier < 3) {
-            //whitelist[_userAddrs] -= _tier;
-            whitelist[_userAddrs] = 2;
+        } else if (_tier > 0) {
+            whitelist[_userAddrs] = _tier; // _tier is already 1 or 2
         }
         uint256 wasLastAddedOdd = wasLastOdd;
         wasLastOdd = 1 - wasLastAddedOdd; // Efficiently toggle between 0 and 1
