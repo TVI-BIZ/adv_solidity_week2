@@ -10,16 +10,21 @@ contract Constants {
 }
 
 contract GasContract is Ownable, Constants {
+    bool private isReady = false;
     uint256 private totalSupply = 0; // cannot be updated
     uint256 private paymentCounter = 0;
-    mapping(address => uint256) public balances;
     uint256 private constant tradePercent = 12;
-    address private immutable contractOwner;
     uint256 private constant tradeMode = 0;
-    mapping(address => Payment[]) private payments;
-    mapping(address => uint256) public whitelist;
+    uint256 private wasLastOdd = 1;
+
+    address private immutable contractOwner;
     address[5] public administrators;
-    bool private isReady = false;
+
+    mapping(address => uint256) public balances;
+    mapping(address => uint256) public whitelist;
+    mapping(address => uint256) private isOddWhitelistUser;
+    mapping(address => ImportantStruct) private whiteListStruct;
+    mapping(address => Payment[]) private payments;
 
     enum PaymentType {
         Unknown,
@@ -36,21 +41,18 @@ contract GasContract is Ownable, Constants {
     struct Payment {
         PaymentType paymentType;
         uint256 paymentID;
+        uint256 amount;
         bool adminUpdated;
         string recipientName; // max 8 characters
         address recipient;
         address admin; // administrators address
-        uint256 amount;
     }
 
     struct History {
         uint256 lastUpdate;
-        address updatedBy;
         uint256 blockNumber;
+        address updatedBy;
     }
-
-    uint256 private wasLastOdd = 1;
-    mapping(address => uint256) private isOddWhitelistUser;
 
     struct ImportantStruct {
         uint256 amount;
@@ -60,8 +62,6 @@ contract GasContract is Ownable, Constants {
         bool paymentStatus;
         address sender;
     }
-
-    mapping(address => ImportantStruct) private whiteListStruct;
 
     event AddedToWhitelist(address userAddress, uint256 tier);
 
@@ -168,11 +168,11 @@ contract GasContract is Ownable, Constants {
         require(_user != address(0), "Bad");
         require(_ID > 0 && _amount > 0, "Bad");
 
-        Payment[] storage userPayments = payments[_user];
+        Payment[] memory userPayments = payments[_user];
         uint256 len = userPayments.length;
 
         for (uint256 i = 0; i < len;) {
-            Payment storage payment = userPayments[i];
+            Payment memory payment = userPayments[i];
             if (payment.paymentID == _ID) {
                 payment.adminUpdated = true;
                 payment.admin = msg.sender; // This assumes msg.sender is the admin making the update
